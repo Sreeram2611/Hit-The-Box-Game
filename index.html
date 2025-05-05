@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hit The Box Game</title>
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, green, rgb(22, 169, 243));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .game-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .status {
+      font-size: 1.2rem;
+      margin: 1rem 0;
+      color: #444;
+      min-height: 2rem;
+    }
+
+    .month-display {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: #d7263d;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      margin: 0.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 1rem;
+      background-color: #2b2d42;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+
+    .btn:hover {
+      background-color: #1a1b2f;
+      transform: scale(1.05);
+    }
+
+    .escape-options {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .escape-btn {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 1rem;
+      background-color: #06d6a0;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .escape-btn:hover {
+      background-color: #04b88a;
+    }
+
+    @media (max-width: 600px) {
+      .month-display {
+        font-size: 2rem;
+      }
+      .btn {
+        width: 100%;
+        margin: 0.5rem 0;
+      }
+    }
+    .about-btn {
+  position: fixed;
+  bottom: 4rem;
+  right: 1rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #2b2d42;
+  color: white;
+  font-size: 1.2rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transition: background 0.3s ease, transform 0.2s;
+}
+
+.about-btn:hover {
+  background-color: #1a1b2f;
+  transform: scale(1.05);
+}
+#footer-name {
+    text-decoration: none;
+    color: rgb(0, 255, 166);
+    font-size: 1.1rem;
+}
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Hit The Box Game</h1>
+    <div class="status" id="status">Your Turn</div>
+    <div class="month-display" id="month">January</div>
+    <button class="btn" id="nextBtn">Say Month</button>
+    <button class="btn" id="hitBtn" style="display:none;">Hit!</button>
+    <div class="escape-options" id="escapeOptions" style="display:none;"></div>
+    <button class="btn" id="restartBtn" style="display:none; background-color: #e63946;">Restart</button>
+  </div>
+  <script>
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    let currentMonthIndex = 0;
+    let playerSaidLast = true;
+    let gameOver = false;
+
+    const statusEl = document.getElementById('status');
+    const monthEl = document.getElementById('month');
+    const nextBtn = document.getElementById('nextBtn');
+    const hitBtn = document.getElementById('hitBtn');
+    const escapeOptions = document.getElementById('escapeOptions');
+    const restartBtn = document.getElementById('restartBtn');
+
+    function updateUI() {
+      monthEl.textContent = months[currentMonthIndex];
+    }
+
+    function botTurn() {
+      if (gameOver) return;
+      playerSaidLast = false;
+      currentMonthIndex++;
+      updateUI();
+      if (months[currentMonthIndex] === "December") {
+        statusEl.textContent = "Computer got December! It will hit!";
+        setTimeout(() => {
+          startEscape();
+        }, 1500);
+      } else {
+        statusEl.textContent = "Your Turn";
+        nextBtn.disabled = false;
+      }
+    }
+
+    nextBtn.onclick = () => {
+      if (gameOver) return;
+      playerSaidLast = true;
+      currentMonthIndex++;
+      updateUI();
+      nextBtn.disabled = true;
+
+      if (months[currentMonthIndex] === "December") {
+        statusEl.textContent = "You got December! Hit the computer!";
+        nextBtn.style.display = 'none';
+        hitBtn.style.display = 'inline-block';
+      } else {
+        setTimeout(() => {
+          botTurn();
+        }, 1000);
+      }
+    };
+
+    hitBtn.onclick = () => {
+      statusEl.textContent = "Computer is trying to escape...";
+      hitBtn.style.display = 'none';
+      startEscape();
+    };
+
+    function startEscape() {
+      escapeOptions.style.display = 'flex';
+      escapeOptions.innerHTML = "";
+      const choices = ["Left", "Right", "Duck", "Jump"];
+      const correctChoice = choices[Math.floor(Math.random() * choices.length)];
+
+      choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.textContent = choice;
+        btn.className = 'escape-btn';
+        btn.onclick = () => {
+          gameOver = true;
+          escapeOptions.style.display = 'none';
+          restartBtn.style.display = 'inline-block';
+
+          if (choice === correctChoice) {
+            if (playerSaidLast) {
+              statusEl.textContent = "Computer escaped! You lose!";
+            } else {
+              statusEl.textContent = "You escaped! You win!";
+            }
+          } else {
+            if (playerSaidLast) {
+              statusEl.textContent = "Hit successful! You win!";
+            } else {
+              statusEl.textContent = "You got hit! You lose!";
+            }
+          }
+        };
+        escapeOptions.appendChild(btn);
+      });
+    }
+
+    restartBtn.onclick = () => {
+      currentMonthIndex = 0;
+      playerSaidLast = true;
+      gameOver = false;
+      updateUI();
+      statusEl.textContent = "Your Turn";
+      nextBtn.style.display = 'inline-block';
+      nextBtn.disabled = false;
+      hitBtn.style.display = 'none';
+      escapeOptions.style.display = 'none';
+      restartBtn.style.display = 'none';
+    };
+
+    updateUI();
+  </script>
+<button class="about-btn" onclick="document.getElementById('aboutModal').style.display='flex'">ℹ️</button>
+<div id="aboutModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:999;">
+    <div style="background:white; padding:1.5rem; border-radius:1rem; width:90%; max-width:500px; max-height:80vh; overflow-y:auto; position:relative; box-shadow:0 4px 20px rgba(0,0,0,0.3); text-align:left;">
+      <button onclick="document.getElementById('aboutModal').style.display='none'" 
+        style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      <h2 style="margin-bottom:1rem; color:#2b2d42;">About the Game</h2>
+      <p style="line-height:1.6; color:#444;">
+        <strong>Hit The Box</strong> is a fun turn-based reflex game where the player and computer take turns calling out months — from January to December. 
+        The player who says <strong>December</strong> must try to "hit" the opponent. The opponent then gets a chance to escape by selecting the correct action (Jump, Duck, etc.).
+        <br><br>
+        If the hit succeeds, the attacker wins. If the escape is correct, the defender wins!
+        <br><br>
+        This game was designed for fun, timing, and quick decision-making. Enjoy!
+      </p>
+      <hr style="margin:1rem 0;">
+      <p style="font-size:0.9rem; color:#777;">
+        Developed by <a href="https://www.linkedin.com/in/sreeramsp/" target="_blank" style="color:#06d6a0; text-decoration:none;">Sreeram Palani</a> &copy; 2025
+      </p>
+    </div>
+  </div>
+  
+  </Footer -->
+  <footer style="text-align:center; padding:1rem 0; background:#222; color:white; position:fixed; bottom:0; width:100%; font-size:0.9rem;">
+    Developed by <a id="footer-name" href="https://www.linkedin.com/in/sreeramsp/" target="_blank" style="color:#fb0000; text-decoration:none;">Sreeram Palani</a> &copy; 2025
+    <p>Made With 💙</p>
+  </footer>
+</body>
+</html>
